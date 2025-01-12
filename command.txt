@@ -26,3 +26,14 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 docker tag test-coworking-analytics:latest 140570531199.dkr.ecr.us-east-1.amazonaws.com/coworking:latest
 
 docker push 140570531199.dkr.ecr.us-east-1.amazonaws.com/coworking:latest
+
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace default mydatabase-secrets -o jsonpath="{.data.postgres-password}" | base64 -d)
+
+kubectl apply -f configmap.yml 
+kubectl apply -f secrets.yml
+kubectl apply -f coworking.yml
+
+aws iam attach-role-policy --role-name eksctl-my-cluster-nodegroup-my-nod-NodeInstanceRole-U9t78mW4omaN --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+aws eks create-addon --addon-name amazon-cloudwatch-observability --cluster-name my-cluster
+

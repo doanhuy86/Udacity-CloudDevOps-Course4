@@ -3,22 +3,22 @@ kind: Service
 metadata:
   name: coworking
 spec:
-  # A local environment doesn't generally have a LoadBalancer, so we use NodePort instead.
-  type: NodePort
   selector:
     service: coworking
   ports:
-  - name: "5153"
+  - name: "5050"
     protocol: TCP
     port: 5153
     targetPort: 5153
+
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: coworking
   labels:
-    name: coworking
+    service: coworking
 spec:
   replicas: 1
   selector:
@@ -31,9 +31,8 @@ spec:
     spec:
       containers:
       - name: coworking
-        # Locally hosted docker image
-        image: <DOCKER_IMAGE_NAME>:<IMAGE_TAG>
-        imagePullPolicy: IfNotPresent
+        image: 140570531199.dkr.ecr.us-east-1.amazonaws.com/coworking:latest
+        imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /health_check
@@ -47,12 +46,12 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 5
         envFrom:
-        - configMapRef:
-            name: <NAME OF THE ConfigMap>
+          - configMapRef:
+              name: postgresql-configmap1
         env:
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: my-postgres-db-password
-              key: my-postgres-db-configmap
+          - name: db_password
+            valueFrom:
+              secretKeyRef:
+                name: mydatabase-secrets
+                key: db_password
       restartPolicy: Always
